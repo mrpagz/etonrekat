@@ -1,6 +1,5 @@
 // add required modules
 const express = require("express");
-const path = require("path");
 
 // Create server application at port 3000
 const app = express();
@@ -10,12 +9,13 @@ const PORT = process.env.PORT || 3000;
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
+// Use public folder
+app.use(express.static("public"));
+
 // Include js files
 require("./routes/apiRoutes")(app);
 require("./routes/htmlRoutes")(app);
 
-// Use public folder
-app.use(express.static("public"));
 
 // Add listener
 app.listen(PORT, function() {

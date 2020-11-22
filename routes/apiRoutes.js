@@ -1,71 +1,80 @@
 // Required Modules
 const fs = require("fs");
-const notesData = require("../Develop/db/db.json");
+const path = require("path");
+const DB_PATH = path.join(__dirname, '../db/db.json')
 
-
-module.exports = function(app){
-
-
-    //========== FUNCTIONS ==========
-    function writeToDB(notes){
-        // Converts new JSON Array back to string
-        notes = JSON.stringify(notes);
-        console.log (notes);
+//========== HELPER FUNCTIONS ==========
+function writeToDB(notes) {
+    // try: attempt some process that may fail (fs.readFile)
+    // catch: if a failure happens inside try block, error references the thrown error
+    try {
+        // Converts new JSON Array back to string &&
         // Writes String back to db.json
-        fs.writeFileSync("../Develop/db/db.json", notes, function(err){
-            if (err) {
-                return console.log(err);
-            }
-        });
+        fs.writeFileSync(DB_PATH, JSON.stringify(notes));
+        //1. JSON/stringify converts [{"title":"Test Title","text":"Test text"}]:notes[] -> "[{"title":"Test Title","text":"Test text"}]":string
+        //2. fs.writeFileSync --> saves notes to db.json
+    } catch (error) {
+        console.log(error)
     }
+}
+
+function getFromDB() {
+    // try: attempt some process that may fail (fs.readFile)
+    // catch: if a failure happens inside try block, error references the thrown error
+    try {
+        // Gets String back from db.json &&
+        // Converts new JSON Array from string
+        return JSON.parse(fs.readFileSync(DB_PATH, 'utf8')) || [];
+        //1. fs.readFile returns --> notes = "[{"title":"Test Title","text":"Test text"}]":string
+        //2. JSON.parse(notes) = [{"title":"Test Title","text":"Test text"}]:notes[]
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+module.exports = function (app) {
 
     //========== API ROUTES ==========
 
     // GET Method to return all notes
-    app.get("/api/notes", function(req, res){
+    app.get("/api/notes", function (req, res) {
+        const notesData = getFromDB();
         res.json(notesData);
     });
 
     // POST Method to add notes
-    app.post("/api/notes", function(req, res){
+    app.post("/api/notes", function (req, res) {
+        const notesData = getFromDB();
 
         // Set unique id to entry
-        if (notesData.length == 0){
-            req.body.id = "0";
-        } else{
-            req.body.id = JSON.stringify(JSON.parse(notesData[notesData.length - 1].id) + 1);
+        if (notesData.length == 0) {
+            req.body.id = 0;
+        } else {
+            req.body.id = notesData[notesData.length - 1].id + 1;
         }
-        
-        console.log("req.body.id: " + req.body.id);
 
         // Pushes Body to JSON Array
         notesData.push(req.body);
 
         // Write notes data to database
         writeToDB(notesData);
-        console.log(notesData);
 
         // returns new note in JSON format.
         res.json(req.body);
     });
 
     // DELETE Method to delete note with specified ID
-    app.delete("/api/notes/:id", function(req, res){
-        
+    app.delete("/api/notes/:id", function (req, res) {
+        const notesData = getFromDB();
+
         // Obtains id and converts to a string
-        let id = req.params.id.toString();
-        console.log(id);
+        let id = parseInt(req.params.id);
 
         // Goes through notesArray searching for matching ID
-        for (i=0; i < notesData.length; i++){
-           
-            if (notesData[i].id == id){
-                console.log("match!");
-                // responds with deleted note
-                res.send(notesData[i]);
-
+        for (i = 0; i < notesData.length; i++) {
+            if (notesData[i].id == id) {
                 // Removes the deleted note
-                notesData.splice(i,1);
+                notesData.splice(i, 1);
                 break;
             }
         }
@@ -73,5 +82,6 @@ module.exports = function(app){
         // Write notes data to database
         writeToDB(notesData);
 
+        res.sendStatus(200);
     });
 };
