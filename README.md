@@ -4,9 +4,6 @@
   You can try the app here:
   https://salty-escarpment-41456.herokuapp.com/
 
-  Please check this preview of the APP
-  https://drive.google.com/file/d/1DI6jgd4Qphy1mqXz9-lr6CFkLV30DTew/view
-
   # Description
   Application would allow users to create, save, view previously saved and delete previously saved notes. This application will use an Express backend and save and retrieve note data from a JSON file via routes. 
 
